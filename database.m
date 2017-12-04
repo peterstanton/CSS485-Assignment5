@@ -1,40 +1,37 @@
 % Change the filenames if you've saved the files under different names
 % On some platforms, the files might be saved as 
 % train-images.idx3-ubyte / train-labels.idx1-ubyte
-Input = loadMNISTImages('train-images.idx3-ubyte')'; %inputs
-Output = loadMNISTLabels('train-labels.idx1-ubyte')'; %outputs
+Input = loadMNISTImages('train-images.idx3-ubyte'); %inputs
+Output = loadMNISTLabels('train-labels.idx1-ubyte'); %outputs
  
 % We are using display_network from the autoencoder code
 % display_network(images(:,1:100)); % Show the first 100 images
-disp(labels(1:10));
-
-LearningRate = 0.05;
-
+ LearningRate = 0.05;
+  
 NumHidLayerNeurons = 500;
-
+NumOutLayer = 4;
+ 
 HiddenLayerWeights = rand(NumHidLayerNeurons,784); % Weight matrix from Input to Hidden
-OutputLayerWeights = rand(15,NumHidLayerNeurons); % Weight matrix from Hidden to Output
-biasHidden = rand(NumHidLayerNeurons,1);         % Random bias of the hidden layer
-biasOutput = rand(15,1);  %Bias of the output layer, DONT KNOW SIZE OF OUTPUT YET
+OutputLayerWeights = rand(NumOutLayer,NumHidLayerNeurons); % Weight matrix from Hidden to Output
+biasHidden = rand(NumHidLayerNeurons,1);         % Random bias.
+biasOutput = rand(NumOutLayer,1);
 
-IterationCount = 0;
-
-ErrorVec1(1:50000) = 0;
-xVec(1:50000) = 0;
-tester = 10.00;
+tarIterations = 10000;
+IterationCount = 0;  %Count passes.
+ErrorVec1(1:tarIterations) = 0;
+xVec(1:tarIterations) = 0;
 i = 0;
-
-while(IterationCount < 50000)
+while(IterationCount < tarIterations)
     if i == 6000
         i = 1;
     else
         i = i + 1;
     end
-    IterationCount = IterationCount + 1;           %Increment the counter
-    outOfHidden = logsig(HiddenLayerWeights * Input(:,i) + biasHidden);   
+    IterationCount = IterationCount + 1           %Increment the counter
+    outOfHidden = softmax(HiddenLayerWeights * Input(:,i) + biasHidden);   
     outOfOutput = logsig(OutputLayerWeights * outOfHidden + biasOutput);
     
-   myError = Output(:,i) - outOfOutput;
+   myError = decimalToBinaryVector(Output(i),NumOutLayer)' - outOfOutput;
   
    S2 = -2.*diag(ones(size(outOfOutput))-outOfOutput.*outOfOutput)*myError;   
    S1 = diag(ones(size(outOfHidden))-outOfHidden.*outOfHidden)*OutputLayerWeights'*S2;
@@ -47,5 +44,10 @@ while(IterationCount < 50000)
    
    xVec(IterationCount) = IterationCount;
    ErrorVec1(IterationCount) = sum(myError.^2)/length(myError);
-   tester = sum(myError.^2);    
 end
+
+figure(1)
+plot(xVec,ErrorVec1)
+title('Backpropagation Network Training')
+xlabel('Backpropagation Iterations')
+ylabel('Squared Error')

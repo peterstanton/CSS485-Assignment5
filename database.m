@@ -6,9 +6,9 @@ Output = loadMNISTLabels('train-labels.idx1-ubyte'); %outputs
  
 % We are using display_network from the autoencoder code
 % display_network(images(:,1:100)); % Show the first 100 images
- LearningRate = 0.05;
+ LearningRate = 0.001;
   
-NumHidLayerNeurons = 500;
+NumHidLayerNeurons = 200;
 NumOutLayer = 4;
  
 HiddenLayerWeights = rand(NumHidLayerNeurons,784); % Weight matrix from Input to Hidden
@@ -31,11 +31,15 @@ while(IterationCount < tarIterations)
     outOfHidden = softmax(HiddenLayerWeights * Input(:,i) + biasHidden);   
     outOfOutput = logsig(OutputLayerWeights * outOfHidden + biasOutput);
     
-   myError = decimalToBinaryVector(Output(i),NumOutLayer)' - outOfOutput;
+    targetNumber = Output(i,:);
+    targetAnswer = decimalToBinaryVector(targetNumber,NumOutLayer)';
+
+    
+   myError = targetAnswer - outOfOutput;
   
-   S2 = -2.*diag(ones(size(outOfOutput))-outOfOutput.*outOfOutput)*myError;   
-   S1 = diag(ones(size(outOfHidden))-outOfHidden.*outOfHidden)*OutputLayerWeights'*S2;
-         
+   S2 = -2.*diag((ones(size(outOfOutput))-outOfOutput).*outOfOutput)*myError;   
+   S1 = diag((ones(size(outOfHidden))-outOfHidden).*outOfHidden)*OutputLayerWeights'*S2;
+
    OutputLayerWeights = OutputLayerWeights - LearningRate * S2 * outOfHidden';  
    HiddenLayerWeights = HiddenLayerWeights - LearningRate * S1 * Input(:,i)';
    
